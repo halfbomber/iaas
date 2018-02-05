@@ -1,0 +1,6 @@
+tools_packages:
+  - vim
+  - htop
+  - git
+  - bash-completion
+  - cowsay

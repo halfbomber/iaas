@@ -1,0 +1,13 @@
+---
+- hosts: all
+  name: installation et configuration de base sur tous serveurs
+  roles:
+    - Repos
+    - DefaultTools
+
+- hosts: pxe
+  name: installation et configuration du service nginx
+  roles:
+    -  Nginx
+  tags: tnginx
+...

@@ -1,0 +1,17 @@
+php_timezone: Europe/Paris
+php_memory_limit: "1024M"
+php_post_max_size: "20M"
+php_upload_max_filesize: "20M"
+php_packages:
+  - php70w-fpm
+  - php70w-opcache
+  - php70w-gd
+  - php70w-mysql
+  - php70w-mcrypt
+  - php70w-cli
+  - php70w-pear
+  - php70w-devel
+  - gpgme-devel
+
+#domains:
+#  - iaas.dbz

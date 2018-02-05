@@ -1,0 +1,37 @@
+---
+- name: insatllation de php
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+    - "{{ php_packages }}"
+
+
+- name: configuration de base de php
+  lineinfile:
+    dest: /etc/php.ini
+    regexp: 'disable_functions[\s]?='
+    line: 'disable_functions = exec,passthru,shell_exec,proc_open,popen'
+
+- lineinfile:
+    dest: /etc/php.ini
+    regexp: 'upload_max_filesize[\s]?='
+    line: 'upload_max_filesize = {{ php_upload_max_filesize }}'
+
+- lineinfile:
+    dest: /etc/php.ini
+    regexp: 'post_max_size[\s]?='
+    line: 'post_max_size = {{ php_post_max_size }}'
+
+- lineinfile:
+    dest: /etc/php.ini
+    regexp: 'memory_limit[\s]?='
+    line: 'memory_limit = {{ php_memory_limit }}'
+
+- lineinfile:
+    dest: /etc/php.ini
+    regexp: 'date.timezone[\s]?='
+    line: 'date.timezone = {{ php_timezone }}'
+  notify: restart_php
+...

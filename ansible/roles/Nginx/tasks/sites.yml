@@ -1,0 +1,21 @@
+---
+- name: creation du dossier du domain
+  become: yes
+  file:
+    path: /home/"{{ item[1] }}"/"{{ item[0] }}"
+    state: directory
+
+- name: lien vers www
+  become: yes
+  file:
+    src: /home/"{{ item[1] }}"/"{{ item[0] }}"
+    dest: /var/www/"{{ item[0] }}"
+    state: link
+
+- name: creation de la conf nginx
+  template:
+    src: templates/sites_nginx.j2
+    dest: /etc/nginx/conf.d/"{{ item[0] }}"
+    force: yes
+  notify: reload_nginx
+...

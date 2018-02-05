@@ -1,0 +1,10 @@
+---
+- name: Installation des packets par defaut
+  become: yes
+  yum:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - "{{ tools_packages }}"
+...

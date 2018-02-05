@@ -1,0 +1,36 @@
+---
+- name: Install
+  become: yes
+  yum:
+    name: nginx
+    state: latest
+    update_cache: true
+  tags: tinstallnginx
+
+- name: Start
+  become: yes
+  service:
+    name: nginx
+    state: started
+    enabled: true
+  tags: tinstallnginx
+
+- name: Delete_default_site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload_nginx
+  tags: tinstallnginx
+
+- name: installation de php
+  include_tasks: php.yml
+  tags: tphp
+
+- name: confuration des sites
+  become: yes
+  include_tasks: sites.yml
+  with_items:
+    - domains
+    - users
+  tags: tsite
+...
