@@ -1,0 +1,10 @@
+---
+# Ethernet
+- name: Create the network configuration file for ethernet devices.
+  template: src=ethernet.j2 dest={{ network_config_path }}/ifcfg-{{ item.device }}
+  with_items: "{{ network_ethernet_interfaces }}"
+  when: network_ethernet_interfaces is defined
+  register: ethernet_result
+  notify: restart_network
+
+...

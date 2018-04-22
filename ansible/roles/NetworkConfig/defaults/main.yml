@@ -1,0 +1,9 @@
+---
+network_config_path: "/etc/sysconfig/network-scripts"
+device: []
+bootproto: []
+address: []
+netmask: []
+gateway: []
+
+network_ethernet_interfaces: []

@@ -1,0 +1,99 @@
+# Network Information
+%include /tmp/network.ks
+# Create a %pre section as below
+%pre --interpreter=/usr/bin/bash
+exec < /dev/tty6 > /dev/tty6 2> /dev/tty6
+chvt 6
+
+function readentry () {
+ read -p "Enter Hostname    : " HOSTNAME
+ read -p "Enter IP Address  : " IPADDR
+ read -p "Enter NetMask     : " NETMASK
+ read -p "Enter Gateway     : " GATEWAY
+ read -p "Vous informations sont elles correcte ? (Y/N) " reponse
+ echo " "
+ echo "------- Vos Informations ------"
+ echo "Hostname :" $HOSTNAME
+ echo "IP Address :" $IPADDR
+ echo "NetMask :" $NETMASK
+ echo "Gateway :" $GATEWAY
+ echo " "
+}
+
+readentry
+
+while [ $reponse != "Y" ]
+do
+        readentry
+done
+echo "Configuration valide !"
+echo " "
+
+
+echo "network --bootproto=static --hostname=$HOSTNAME --device=ens33 --gateway=$GATEWAY --ip=$IPADDR --netmask=$NETMASK --noipv6 --nameserver=8.8.8.8 --onboot=on --activate" > /tmp/network.ks
+
+chvt 1
+exec < /dev/tty1 > /dev/tty1 2> /dev/tty1
+%end
+
+
+
+
+install
+#Langue
+lang fr_FR.UTF-8
+#Selection agencement clavier
+keyboard fr
+#Conf de la timezone
+timezone Europe/Paris
+#5
+auth --useshadow --enablemd5
+#Desactivation du SElinux pour des problemes de compatibilitÃ©
+selinux --disabled
+#Desactivatio de firewallD
+firewall --disabled
+#Acceptation EULA
+services --enabled=sshd
+eula --agreed
+
+
+
+#repo de centos7
+repo --name=epel --baseurl=http://dl.fedoraproject.org/pub/epel/7/x86_64/
+#Image de centos7
+url --url="http://mirror.cogentco.com/pub/linux/centos/7/os/x86_64/"
+
+
+#Configuration du boot et du partionnement
+bootloader --location mbr  --boot-drive=sda
+clearpart --all --drive=sda
+autopart
+
+
+#Mot de passe du root ( non cryptÃ© mais a faire plus tard )
+rootpw {{ sslpassword.stdout }}
+user --name=iaas --groups=wheel --password={{ sslpassword.stdout }}
+
+
+#Packages a installer
+%packages
+git
+zsh
+net-tools
+epel-release
+vim
+
+
+%end
+%post --nochroot --log=/root/kickstart_post.log --interpreter /bin/bash
+
+
+#Ajout DNS
+dns="/etc/resolv.conf"
+echo " "
+/bin/cat <<EOM >$dns
+search {{ domains }}
+nameserver {{ dns_dhcp }}
+EOM
+
+%end

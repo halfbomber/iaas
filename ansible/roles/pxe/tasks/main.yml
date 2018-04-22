@@ -1,0 +1,126 @@
+---
+- name: insatllation des packets necessaires au fonctionnement pxe
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - "{{ pxe_packages }}"
+
+- name: deploiement de la conf DHCP
+  template:
+    src: templates/dhcp_conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+    force: yes
+  with_items: "{{ network_ethernet_interfaces }}"
+
+- name: modificaiton du fichier de configuraiton tftp
+  become: yes
+  lineinfile:
+    path: /etc/xinetd.d/tftp
+    regexp: ' disable*=\ '
+    line: ' disable   = no'
+
+- name: copie des fichiers necessaires a tftp
+  copy:
+    src: "{{ item }}"
+    dest: /var/lib/tftpboot
+  with_items:
+    - /usr/share/syslinux/pxelinux.0
+    - /usr/share/syslinux/menu.c32
+    - /usr/share/syslinux/memdisk
+    - /usr/share/syslinux/mboot.c32
+    - /usr/share/syslinux/chain.c32
+
+- name: creation des dossiers pxelinux.cfg et networkboot
+  file:
+    path: /var/lib/tftpboot/{{ item }}
+    state: directory
+  with_items:
+    - pxelinux.cfg
+    - networkboot
+
+- name: transfaire du fichier ISO centos 7
+  copy:
+    src: iso/CentOS-7-x86_64-Minimal-1708.iso
+    dest: /tmp/
+
+- name: montage de l'iso dans /mnt
+  mount:
+   path: /mnt/
+   src: /tmp/CentOS-7-x86_64-Minimal-1708.iso
+   fstype: iso9660
+   opts: ro
+   state: mounted
+
+- mane: test si /var/ftp/pub est present
+  shell: test -d /var/ftp/pub
+  register: resultat
+
+- name: copie du contenu de l'iso
+  shell: cp -r /mnt/* /var/ftp/pub/
+
+- name: copier du fichier initrd.img et du dossier vmlinuz ver tftpboot
+  shell: cp "{{ item }}" /var/lib/tftpboot/networkboot/
+  with_items:
+    - /mnt/images/pxeboot/vmlinuz
+    - /mnt/images/pxeboot/initrd.img
+
+- name: démontage de l'iso
+  mount:
+   path: /mnt/
+   src: /tmp/CentOS-7-x86_64-Minimal-1708.iso
+   fstype: iso9660
+   opts: ro
+   state: unmounted
+
+- name: encription du mot de passe par defaut
+  shell: openssl passwd -1 "{{ default_password_pxe }}"
+  register: sslpassword
+
+- name: copie du template ks dans le serveur
+  template:
+    src: templates/ks.j2
+    dest: /var/ftp/pub/centos7-ks.cfg
+
+- name: deploiement du template pxe_menu
+  template:
+    src: templates/pxe_menu.j2
+    dest: /var/lib/tftpboot/pxelinux.cfg/default
+  with_items: "{{ network_ethernet_interfaces }}"
+
+- name: start xinetd
+  become: yes
+  service:
+    name: xinetd
+    state: started
+    enabled: true
+
+- name: start dhcpd
+  become: yes
+  service:
+    name: dhcpd
+    state: started
+    enabled: true
+
+- name: start vsftpd
+  become: yes
+  service:
+    name: vsftpd
+    state: started
+    enabled: true
+
+- name: activation du tfp
+  shell: setsebool -P allow_ftpd_full_access 1
+
+- name: modification de la configuration firewalld
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+  with_items:
+    - ftp
+    - dhcp
+    - tftp
+  notify: reload_firewalld
+
+...

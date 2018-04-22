@@ -1,0 +1,14 @@
+---
+pxe_packages:
+  - dhcp
+  - tftp
+  - tftp-server
+  - syslinux
+  - vsftpd
+  - xinetd
+
+#deb_range_dhcp: 10
+#fin_range_dhcp: 30
+dns_dhcp: 10.0.0.230
+#gw_dhcp: {{ conf_enp33.gw }}
+#broadcast_dchp: 172.16.0.255

@@ -1,0 +1,25 @@
+# DHCP Server Configuration file.
+
+ddns-update-style interim;
+ignore client-updates;
+authoritative;
+allow booting;
+allow bootp;
+allow unknown-clients;
+
+# internal subnet for my DHCP Server
+subnet {{ item.network }} netmask {{ item.netmask }} {
+range {{ item.deb_range_dhcp }} {{ item.fin_range_dhcp }};
+option domain-name-servers {{ dns_dhcp }};
+option domain-name "pxe.{{ domains }}";
+{% if item.gateway is defined %}
+option routers {{  item.gateway }};
+{% endif %}
+option broadcast-address {{ item.broadcast }};
+default-lease-time 600;
+max-lease-time 7200;
+
+# IP of PXE Server
+next-server {{ item.address }};
+filename "pxelinux.0";
+}
