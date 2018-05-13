@@ -52,14 +52,16 @@
    opts: ro
    state: mounted
 
-- mane: test si /var/ftp/pub est present
-  shell: test -d /var/ftp/pub
-  register: resultat
+- name: creation des dossier pxe/centos7 dans /var/www
+  file:
+    path: /var/www/pxe/centos7
+    state: directory
+    recurse: yes
 
 - name: copie du contenu de l'iso
-  shell: cp -r /mnt/* /var/ftp/pub/
+  shell: cp -r /mnt/* /var/www/pxe/centos7/
 
-- name: copier du fichier initrd.img et du dossier vmlinuz ver tftpboot
+- name: copie du fichier initrd.img et de vmlinuz vers tftpboot
   shell: cp "{{ item }}" /var/lib/tftpboot/networkboot/
   with_items:
     - /mnt/images/pxeboot/vmlinuz
